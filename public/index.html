@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CivicPulse – Report & Track Municipal Issues</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#2563eb;--blue-dark:#1d4ed8;--green:#16a34a;--yellow:#d97706;
+  --red:#dc2626;--gray:#6b7280;--bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--blue);text-decoration:none}
+
+/* NAV */
+nav{background:var(--blue);color:#fff;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.nav-brand{font-size:1.25rem;font-weight:700;letter-spacing:-.5px}
+.nav-brand span{opacity:.7;font-weight:400;font-size:.9rem;margin-left:.4rem}
+.nav-right{display:flex;align-items:center;gap:1rem}
+#navUser{font-size:.875rem;opacity:.85}
+#navLogout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:.35rem .85rem;border-radius:6px;cursor:pointer;font-size:.875rem;transition:background .2s}
+#navLogout:hover{background:rgba(255,255,255,.25)}
+#navAdminLink{font-size:.8rem;background:rgba(255,255,255,.2);padding:.3rem .7rem;border-radius:5px;color:#fff;font-weight:600;display:none}
+
+/* PAGES */
+.page{display:none;min-height:calc(100vh - 60px)}
+.page.active{display:block}
+
+/* AUTH */
+#authPage{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e40af 0%,#2563eb 60%,#3b82f6 100%)}
+.auth-box{background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.auth-logo{text-align:center;margin-bottom:1.5rem}
+.auth-logo h1{font-size:1.75rem;font-weight:800;color:var(--blue)}
+.auth-logo p{color:var(--muted);font-size:.875rem;margin-top:.25rem}
+.auth-tabs{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:1.5rem}
+.auth-tab{flex:1;padding:.5rem;text-align:center;border:none;background:none;border-radius:6px;cursor:pointer;font-size:.875rem;font-weight:500;color:var(--muted);transition:all .2s}
+.auth-tab.active{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.auth-form{display:none}
+.auth-form.active{display:block}
+
+/* FORM ELEMENTS */
+.field{margin-bottom:1rem}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;color:var(--text);transition:border .2s;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
+textarea{resize:vertical;min-height:90px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.65rem 1.25rem;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--blue);color:#fff;width:100%}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-outline{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+.btn-outline:hover{background:#eff6ff}
+.btn-sm{padding:.4rem .85rem;font-size:.8rem}
+.err{color:var(--red);font-size:.825rem;margin-top:.75rem;text-align:center;padding:.5rem;background:#fef2f2;border-radius:6px}
+
+/* DASHBOARD */
+#dashPage{padding:1.5rem}
+.dash-header{margin-bottom:1.5rem}
+.dash-header h2{font-size:1.3rem;font-weight:700}
+.dash-header p{color:var(--muted);font-size:.875rem;margin-top:.2rem}
+
+/* COMPLAINT FORM CARD */
+.card{background:var(--card);border-radius:12px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid var(--border)}
+.card h3{font-size:1rem;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.card h3 svg{flex-shrink:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+
+/* FILE INPUT */
+.file-input-wrapper{position:relative}
+.file-label{display:flex;align-items:center;gap:.75rem;padding:.65rem .85rem;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;transition:border .2s;font-size:.875rem;color:var(--muted)}
+.file-label:hover{border-color:var(--blue);color:var(--blue)}
+#imageInput{display:none}
+#imagePreview{margin-top:.5rem;display:none}
+#imagePreview img{max-height:120px;border-radius:8px;border:1px solid var(--border)}
+
+/* COMPLAINTS LIST */
+.list-header{display:flex;align-items:center;justify-content:space-between;margin:1.5rem 0 .75rem}
+.list-header h3{font-size:1rem;font-weight:700}
+.filter-row{display:flex;gap:.5rem;flex-wrap:wrap}
+.filter-btn{padding:.3rem .7rem;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:.775rem;font-weight:500;cursor:pointer;color:var(--muted);transition:all .2s}
+.filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.complaint-card{background:var(--card);border-radius:10px;padding:1.1rem 1.25rem;border:1px solid var(--border);margin-bottom:.75rem;transition:box-shadow .2s}
+.complaint-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.cc-title{font-weight:600;font-size:.95rem}
+.cc-meta{color:var(--muted);font-size:.775rem;margin-top:.3rem}
+.cc-desc{color:var(--muted);font-size:.85rem;margin-top:.5rem;line-height:1.5}
+.cc-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:.75rem}
+.cc-img{margin-top:.75rem}
+.cc-img img{max-height:140px;border-radius:8px;cursor:pointer;border:1px solid var(--border)}
+.cc-notes{margin-top:.5rem;padding:.5rem .75rem;background:#f8fafc;border-radius:6px;font-size:.825rem;color:var(--muted);border-left:3px solid var(--blue)}
+
+/* STATUS BADGES */
+.badge{padding:.25rem .65rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-in_progress{background:#dbeafe;color:#1e40af}
+.badge-resolved{background:#dcfce7;color:#166534}
+.badge-rejected{background:#fee2e2;color:#991b1b}
+.cat-badge{background:#f1f5f9;color:var(--muted);padding:.2rem .55rem;border-radius:12px;font-size:.72rem;font-weight:600}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.75rem 1.25rem;border-radius:10px;color:#fff;font-size:.875rem;font-weight:500;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;max-width:300px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast-success{background:#16a34a}
+.toast-error{background:#dc2626}
+
+/* IMAGE MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-overlay img{max-width:90vw;max-height:90vh;border-radius:12px}
+.modal-close{position:absolute;top:1rem;right:1.5rem;color:#fff;font-size:2rem;cursor:pointer;line-height:1}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty svg{margin-bottom:.75rem;opacity:.4}
+.spinner{border:3px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;width:28px;height:28px;animation:spin .7s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- AUTH PAGE -->
+<div id="authPage" class="page active">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>🏛️ CivicPulse</h1>
+      <p>Municipal Complaint Management System</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm" class="auth-form active">
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="citizen@demo.com" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
+      <div id="loginErr" class="err" style="display:none"></div>
+      <p style="text-align:center;font-size:.8rem;color:var(--muted);margin-top:1rem">
+        Demo: <b>citizen@demo.com</b> / demo123 &nbsp;|&nbsp; <b>admin@demo.com</b> / admin123
+      </p>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerForm" class="auth-form">
+      <div class="field"><label>Full Name</label><input type="text" id="regName" placeholder="Your name"></div>
+      <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@email.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="regPassword" placeholder="Min 6 characters"></div>
+      <button class="btn btn-primary" onclick="doRegister()">Create Account</button>
+      <div id="regErr" class="err" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav" style="display:none">
+  <div class="nav-brand">🏛️ CivicPulse <span>Citizen Portal</span></div>
+  <div class="nav-right">
+    <a id="navAdminLink" href="/admin.html">Admin Panel →</a>
+    <span id="navUser"></span>
+    <button id="navLogout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD PAGE -->
+<div id="dashPage" class="page">
+  <div style="max-width:800px;margin:0 auto;padding:1.5rem">
+
+    <!-- Submit Complaint -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <h3>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Submit a New Complaint
+      </h3>
+      <div class="grid2">
+        <div class="field"><label>Title</label><input type="text" id="cTitle" placeholder="Brief description of the issue"></div>
+        <div class="field"><label>Category</label>
+          <select id="cCategory">
+            <option value="">Select category</option>
+            <option>Roads</option><option>Water</option><option>Electricity</option>
+            <option>Sanitation</option><option>Parks</option><option>Drainage</option>
+            <option>Street Lights</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Location</label><input type="text" id="cLocation" placeholder="Street, area, landmark"></div>
+      <div class="field"><label>Description</label><textarea id="cDesc" placeholder="Describe the issue in detail..."></textarea></div>
+      <div class="field">
+        <label>Photo (optional)</label>
+        <div class="file-input-wrapper">
+          <label class="file-label" for="imageInput">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            <span id="fileNameLabel">Click to attach a photo</span>
+          </label>
+          <input type="file" id="imageInput" accept="image/*" onchange="previewImage(this)">
+        </div>
+        <div id="imagePreview"><img id="previewImg" src="" alt="preview"></div>
+      </div>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitComplaint()" style="width:auto;padding:.65rem 2rem">
+        Submit Complaint
+      </button>
+    </div>
+
+    <!-- Complaints List -->
+    <div class="list-header">
+      <h3>My Complaints</h3>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="setFilter('in_progress',this)">In Progress</button>
+        <button class="filter-btn" onclick="setFilter('resolved',this)">Resolved</button>
+      </div>
+    </div>
+    <div id="complaintsList"></div>
+  </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal-overlay" id="imgModal" onclick="this.classList.remove('open')">
+  <span class="modal-close">×</span>
+  <img id="modalImg" src="" alt="">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api';
+let token = localStorage.getItem('cp_token');
+let currentUser = null;
+let allComplaints = [];
+let currentFilter = 'all';
+
+// ── Init ──
+window.onload = () => {
+  if (token) {
+    const pl = JSON.parse(atob(token.split('.')[1]));
+    if (pl.exp * 1000 > Date.now()) {
+      currentUser = pl;
+      showDash();
+    } else {
+      localStorage.removeItem('cp_token');
+    }
+  }
+};
+
+function showDash() {
+  document.getElementById('authPage').style.display = 'none';
+  document.getElementById('mainNav').style.display = 'flex';
+  document.getElementById('dashPage').style.display = 'block';
+  document.getElementById('navUser').textContent = currentUser.name;
+  if (currentUser.role === 'admin') {
+    document.getElementById('navAdminLink').style.display = 'inline-block';
+  }
+  loadComplaints();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').classList.toggle('active', tab==='login');
+  document.getElementById('registerForm').classList.toggle('active', tab==='register');
+}
+
+// ── AUTH ──
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  if (!email || !pass) { showErr(errEl, 'Please enter email and password'); return; }
+
+  const btn = document.querySelector('#loginForm .btn-primary');
+  setLoading(btn, true);
+
+  try {
+    const r = await fetch(`${API}/auth/login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pass})
+    });
+    const d = await r.json();
+    if (!r.ok) { showErr(errEl, d.error); return; }
+    token = d.token;
+    currentUser = d.user;
+    localStorage.setItem('cp_token', token);
+    showDash();
+  } catch(e) {
+    showErr(errEl, 'Connection error. Please try again.');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function doRegister() {
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPassword').value;
+  const errEl = document.getElementById('regErr');
+  errEl.style.display = 'none';
+  if (!name||!email||!pass) { showErr(errEl,'All fields are required'); return; }
+
+  const btn = document.querySelector('#registerForm .btn-primary');
+  setLoading(btn, true);
+
+  try {
+    const r = await fetch(`${API}/auth/register`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, password: pass})
+    });
+    const d = await r.json();
+    if (!r.ok) { showErr(errEl, d.error); return; }
+    token = d.token;
+    currentUser = d.user;
+    localStorage.setItem('cp_token', token);
+    showDash();
+    toast('Account created! Welcome to CivicPulse.', 'success');
+  } catch(e) {
+    showErr(errEl, 'Connection error. Please try again.');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('cp_token');
+  token = null; currentUser = null;
+  document.getElementById('authPage').style.display = 'flex';
+  document.getElementById('mainNav').style.display = 'none';
+  document.getElementById('dashPage').style.display = 'none';
+}
+
+// ── COMPLAINTS ──
+async function loadComplaints() {
+  const el = document.getElementById('complaintsList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetch(`${API}/complaints`, { headers: authHeader() });
+    if (!r.ok) throw new Error();
+    allComplaints = await r.json();
+    renderComplaints();
+  } catch {
+    el.innerHTML = '<p class="empty">Failed to load complaints.</p>';
+  }
+}
+
+function renderComplaints() {
+  const el = document.getElementById('complaintsList');
+  const list = currentFilter === 'all' ? allComplaints : allComplaints.filter(c => c.status === currentFilter);
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg><p>No complaints found</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(c => `
+    <div class="complaint-card">
+      <div class="cc-top">
+        <div>
+          <div class="cc-title">${esc(c.title)}</div>
+          <div class="cc-meta">
+            <span class="cat-badge">${esc(c.category)}</span>
+            &nbsp;📍 ${esc(c.location)} &nbsp;·&nbsp; ${fmtDate(c.created_at)}
+          </div>
+        </div>
+        <span class="badge badge-${c.status}">${statusLabel(c.status)}</span>
+      </div>
+      <div class="cc-desc">${esc(c.description)}</div>
+      ${c.image ? `<div class="cc-img"><img src="${c.image}" alt="complaint photo" onclick="openImg('${c.image}')"></div>` : ''}
+      ${c.admin_notes ? `<div class="cc-notes">💬 Admin: ${esc(c.admin_notes)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderComplaints();
+}
+
+async function submitComplaint() {
+  const title    = document.getElementById('cTitle').value.trim();
+  const category = document.getElementById('cCategory').value;
+  const location = document.getElementById('cLocation').value.trim();
+  const desc     = document.getElementById('cDesc').value.trim();
+  const file     = document.getElementById('imageInput').files[0];
+
+  if (!title||!category||!location||!desc) { toast('Please fill all required fields.','error'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  setLoading(btn, true);
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('category', category);
+  fd.append('location', location);
+  fd.append('description', desc);
+  if (file) fd.append('image', file);
+
+  try {
+    const r = await fetch(`${API}/complaints`, { method:'POST', headers: authHeader(), body: fd });
+    const d = await r.json();
+    if (!r.ok) { toast(d.error || 'Failed to submit','error'); return; }
+    toast('Complaint submitted successfully!','success');
+    // Reset form
+    ['cTitle','cLocation','cDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cCategory').value = '';
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('fileNameLabel').textContent = 'Click to attach a photo';
+    loadComplaints();
+  } catch {
+    toast('Connection error. Please try again.','error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+// ── UTILS ──
+function authHeader() { return { Authorization: `Bearer ${token}` }; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(s) { return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+function statusLabel(s) { return {pending:'Pending',in_progress:'In Progress',resolved:'Resolved',rejected:'Rejected'}[s]||s; }
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+function setLoading(btn, on) {
+  if (on) { btn.dataset.orig = btn.textContent; btn.textContent = 'Please wait…'; btn.disabled = true; }
+  else { btn.textContent = btn.dataset.orig || 'Submit'; btn.disabled = false; }
+}
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast toast-${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function previewImage(input) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById('fileNameLabel').textContent = f.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('imagePreview').style.display = 'block';
+  };
+  reader.readAsDataURL(f);
+}
+function openImg(src) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('imgModal').classList.add('open');
+}
+
+// Enter key on login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('authPage').style.display !== 'none') {
+    const af = document.querySelector('.auth-form.active');
+    if (af && af.id === 'loginForm') doLogin();
+    if (af && af.id === 'registerForm') doRegister();
+  }
+});
+</script>
+</body>
+</html>
